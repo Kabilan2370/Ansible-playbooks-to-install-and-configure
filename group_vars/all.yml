@@ -1,0 +1,8 @@
+mysql_root_password: Root@123
+mysql_user: appuser
+mysql_password: App@123
+mysql_db: appdb
+
+postgres_user: appuser
+postgres_password: App@123
+postgres_db: appdb
