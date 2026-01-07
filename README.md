@@ -25,15 +25,19 @@ It also covers database user creation, seeding sample data, log locations, and l
           - logrotate
 
 
-   [image](./4.png)
+![image](./4.png)
    
-   [image](./3.png)
+![image](./3.png)
 
-   4. Using ansible-playnook command to perform the created file to install
+4. Using ansible-playnook command to perform the created file to install
   
             ansible-playbook site.yml
 
-   5. I created a logrotate another file to store the logs for mysql and postgresql. We can see the logs at /var/logs
+5. To check the docker swarm has initiated or not
+
+         sudo docker swarm | grep -i swarm
+
+7. I created a logrotate another file to store the logs for mysql and postgresql. We can see the logs at /var/logs
 
             ls /etc/logrotate.d/
             [mysql]
