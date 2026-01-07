@@ -1,0 +1,96 @@
+# --------------------------------------------------
+# Define variables INLINE (no vars file needed)
+# --------------------------------------------------
+- name: Set PostgreSQL variables
+  set_fact:
+    postgres_user: appuser
+    postgres_password: App@123
+    postgres_db: appdb
+
+# --------------------------------------------------
+# Install PostgreSQL
+# --------------------------------------------------
+- name: Install PostgreSQL and dependencies
+  apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+    update_cache: yes
+
+- name: Ensure PostgreSQL service is running
+  service:
+    name: postgresql
+    state: started
+    enabled: yes
+
+# --------------------------------------------------
+# Set postgres password (peer-safe)
+# --------------------------------------------------
+- name: Set postgres password
+  become: yes
+  shell: |
+    sudo -u postgres psql -c "ALTER USER postgres PASSWORD '{{ postgres_password }}';"
+  args:
+    executable: /bin/bash
+
+# --------------------------------------------------
+# Create application DB user (idempotent)
+# --------------------------------------------------
+- name: Create application DB user
+  become: yes
+  shell: |
+    sudo -u postgres psql -c "
+    DO \$\$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT FROM pg_roles WHERE rolname='{{ postgres_user }}'
+      ) THEN
+        CREATE ROLE {{ postgres_user }} LOGIN PASSWORD '{{ postgres_password }}';
+      END IF;
+    END
+    \$\$;"
+  args:
+    executable: /bin/bash
+
+# --------------------------------------------------
+# Create application database (FIXED)
+# --------------------------------------------------
+- name: Create application database
+  become: yes
+  shell: |
+    sudo -u postgres createdb {{ postgres_db }} || true
+  args:
+    executable: /bin/bash
+
+# --------------------------------------------------
+# Verify database exists (fail fast)
+# --------------------------------------------------
+- name: Verify database exists
+  become: yes
+  shell: |
+    sudo -u postgres psql -lqt | cut -d \| -f 1 | grep -qw {{ postgres_db }}
+  args:
+    executable: /bin/bash
+
+# --------------------------------------------------
+# Import sample data
+# --------------------------------------------------
+- name: Copy sample SQL file
+  copy:
+    src: roles/postgresql/files/sample.sql
+    dest: /tmp/sample.sql
+
+- name: Import sample data
+  become: yes
+  shell: |
+    sudo -u postgres psql {{ postgres_db }} < /tmp/sample.sql
+  args:
+    executable: /bin/bash
+
+- name: Cleanup SQL file
+  file:
+    path: /tmp/sample.sql
+    state: absent
+

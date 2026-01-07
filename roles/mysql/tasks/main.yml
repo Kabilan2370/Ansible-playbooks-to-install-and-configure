@@ -1,0 +1,171 @@
+- name: Install MySQL server and Python dependency
+  apt:
+    name:
+      - mysql-server
+      - python3-mysqldb
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL service is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set MySQL root password via unix socket
+  community.mysql.mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    host_all: yes
+    password: "{{ mysql_root_password }}"
+    plugin: mysql_native_password
+    state: present
+
+- name: Create root .my.cnf
+  copy:
+    dest: /root/.my.cnf
+    content: |
+      [client]
+      user=root
+      password={{ mysql_root_password }}
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Create application database
+  community.mysql.mysql_db:
+    name: "{{ mysql_db }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+
+- name: Create application user
+  community.mysql.mysql_user:
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_password }}"
+    priv: "{{ mysql_db }}.*:ALL"
+    host: "%"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+
+- name: Install MySQL server and Python dependency
+  apt:
+    name:
+      - mysql-server
+      - python3-mysqldb
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL service is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set MySQL root password via unix socket
+  community.mysql.mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    host_all: yes
+    password: "{{ mysql_root_password }}"
+    plugin: mysql_native_password
+    state: present
+
+- name: Create root .my.cnf
+  copy:
+    dest: /root/.my.cnf
+    content: |
+      [client]
+      user=root
+      password={{ mysql_root_password }}
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Create application database
+  community.mysql.mysql_db:
+    name: "{{ mysql_db }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    
+- name: Install MySQL server and Python dependency
+  apt:
+    name:
+      - mysql-server
+      - python3-mysqldb
+    state: present
+    update_cache: yes
+
+- name: Ensure MySQL service is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set MySQL root password via unix socket
+  community.mysql.mysql_user:
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+    name: root
+    host_all: yes
+    password: "{{ mysql_root_password }}"
+    plugin: mysql_native_password
+    state: present
+
+- name: Create root .my.cnf
+  copy:
+    dest: /root/.my.cnf
+    content: |
+      [client]
+      user=root
+      password={{ mysql_root_password }}
+    owner: root
+    group: root
+    mode: '0600'
+
+- name: Create application database
+  community.mysql.mysql_db:
+    name: "{{ mysql_db }}"
+    state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    
+- name: Drop users table if exists
+  community.mysql.mysql_query:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_db: "{{ mysql_db }}"
+    query: "DROP TABLE IF EXISTS users;"
+
+- name: Create application user
+  community.mysql.mysql_user:
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_password }}"
+    priv: "{{ mysql_db }}.*:ALL"
+    host: "%"
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    state: present
+
+- name: Copy sample SQL file to remote host
+  copy:
+    src: sample.sql
+    dest: /tmp/sample.sql
+
+- name: Import sample data
+  community.mysql.mysql_db:
+    name: "{{ mysql_db }}"
+    state: import
+    target: /tmp/sample.sql
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+
+- name: Remove temporary SQL file
+  file:
+    path: /tmp/sample.sql
+    state: absent
+
+
+

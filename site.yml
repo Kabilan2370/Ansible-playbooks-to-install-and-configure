@@ -1,4 +1,4 @@
-- hosts: servers
+- hosts: workers
   become: yes
   roles:
     - nginx
